@@ -40,15 +40,6 @@ def naive_bayes(x_train, y_train, x_test, y_test, le):
     return evaluate_model(y_test, y_pred)
 
 
-def naive_bayes(x_train, y_train, x_test, y_test, le):
-    model = MultinomialNB()
-    model.fit(x_train, y_train)
-    y_pred = model.predict(x_test)
-    y_pred = le.inverse_transform(y_pred)
-
-    return evaluate_model(y_test, y_pred)
-
-
 def svm(x_train, y_train, x_test, y_test, le):
     model = LinearSVC()
     model.fit(x_train, y_train)
