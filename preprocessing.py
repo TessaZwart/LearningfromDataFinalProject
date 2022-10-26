@@ -25,6 +25,17 @@ def perform_stemming(text):
 def clean(text):
     text = re.sub(r'URL', "", text)  # Remove URL's
     text = re.sub(r'@USER', "", text)  # Remove @users
+
+    text = re.sub(r"what's", "what is ", text)
+    text = re.sub(r"\'re", " are ", text)
+    text = re.sub(r"\'d", " would ", text)
+    text = re.sub(r"i'm", "i am ", text)
+    text = re.sub(r"n't", " not ", text)
+    text = re.sub(r"\'scuse", " excuse ", text)
+    text = re.sub(r"\'ll", " will ", text)
+    text = re.sub(r"\'ve", " have ", text)
+    text = re.sub(r"can't", "cannot ", text)
+
     text = re.sub(r'\d+', " ", text)  # Remove numbers
     text = re.sub(r'#', ' ', text)  # remove hashtags
     #text = re.sub(r"[^a-zA-Z]", " ", text)  # Removes special chars
