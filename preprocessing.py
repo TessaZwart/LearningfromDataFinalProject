@@ -8,9 +8,9 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.stem.porter import *
 
-nltk.download('stopwords')
-nltk.download('wordnet')
-nltk.download('omw-1.4')
+# nltk.download('stopwords')
+# nltk.download('wordnet')
+# nltk.download('omw-1.4')
 
 stop_word = stopwords.words('english')
 
@@ -27,7 +27,7 @@ def clean(text):
     text = re.sub(r'@USER', "", text)  # Remove @users
     text = re.sub(r'\d+', " ", text)  # Remove numbers
     text = re.sub(r'#', ' ', text)  # remove hashtags
-    text = re.sub(r"[^a-zA-Z]", " ", text)  # Removes special chars
+    #text = re.sub(r"[^a-zA-Z]", " ", text)  # Removes special chars
     text = text.lower()
     text = text.split()
     text = " ".join([word for word in text if not word in stop_word])  # Remove stop words
