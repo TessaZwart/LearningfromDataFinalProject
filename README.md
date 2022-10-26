@@ -1,14 +1,27 @@
-# LearningfromDataFinalProject
+# LearningfromDataFinalProject 😊
 ## Explanation of repository
 
 Classification of offensive tweets by using a classic model, LSTM, and language model. Additionally, we want to investigate if the content of the offensive words matter in the classification of offensive tweets by changing offensive words to a single OFFENSIVE token.
 
+## 0. Cloning the repository
+Install git and clone the repository. Use the following command to clone the repository:
+```
+git clone https://github.com/TessaZwart/LearningfromDataFinalProject.git
+```
 
-## How to install the dependencies
-(run something with requirements)
 
-SVM, LSTM, LM
+## 1. Installing Dependencies
+Make sure to install all dependencies before the program is executed. Use the following command:
+```
+pip install requirements.txt
+```
 
+
+## 2. Downloading Spacy's language model
+Make sure download and install spacy's language model by using the command:
+```
+python3 -m spacy download en_core_web_sm
+```
 
 ## How to train the model on the data
 
