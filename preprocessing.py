@@ -1,5 +1,7 @@
 import nltk
 import re
+import argparse
+import pandas as pd
 
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
@@ -14,6 +16,16 @@ from nltk.stem.porter import *
 
 stop_word = stopwords.words('english')
 
+def read_corpus(corpus_file):
+    '''Read in review data set and returns docs and labels'''
+    documents = []
+    labels = []
+    with open(corpus_file, encoding='utf-8') as f:
+        for line in f:
+            tokens = line.strip()
+            documents.append(" ".join(tokens.split()[3:]).strip())
+            labels.append(tokens.split()[0])
+    return documents, labels
 
 def perform_stemming(text):
     stemmer = PorterStemmer()
@@ -38,7 +50,7 @@ def clean(text):
 
     text = re.sub(r'\d+', " ", text)  # Remove numbers
     text = re.sub(r'#', ' ', text)  # remove hashtags
-    #text = re.sub(r"[^a-zA-Z]", " ", text)  # Removes special chars
+    text = re.sub(r"[^a-zA-Z]", " ", text)  # Removes special chars
     text = text.lower()
     text = text.split()
     text = " ".join([word for word in text if not word in stop_word])  # Remove stop words
@@ -63,3 +75,26 @@ def data_vectorizer(x_train, y_train, x_test, y_test):
     x_test = vec.transform(x_test)
 
     return x_train, y_train, x_test, y_test, le
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-tf", "--train_file", default='data/train.tsv', type=str,
+                        help="Train file to learn from (default train.tsv)")
+    parser.add_argument("-df", "--dev_file", default='data/dev.tsv', type=str,
+                        help="Dev file to evaluate on (default dev.tsv)")
+    parser.add_argument("-tsf", "--test_file", default='data/test.tsv', type=str,
+                        help="Test file to evaluate on (default test.tsv)")
+    args = parser.parse_args()
+
+    df_train = pd.read_csv(args.train_file, sep='\t', names=['text', 'label'])
+    df_dev = pd.read_csv(args.dev_file, sep='\t', names=['text', 'label'])
+    df_test = pd.read_csv(args.test_file, sep='\t', names=['text', 'label'])
+    print('hoi')
+    # Preprocessing the data
+    df_train['text'] = clean_dataframe(df_train['text'])
+    df_test['text'] = clean_dataframe(df_test['text'])
+    df_dev['text'] = clean_dataframe(df_dev['text'])
+
+    df_train.to_csv('preprocessed_data/train.csv', encoding="utf-8")
+    df_test.to_csv('preprocessed_data/test.csv', encoding="utf-8")
+    df_dev.to_csv('preprocessed_data/dev.csv', encoding="utf-8")
