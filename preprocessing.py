@@ -16,17 +16,6 @@ from nltk.stem.porter import *
 
 stop_word = stopwords.words('english')
 
-def read_corpus(corpus_file):
-    '''Read in review data set and returns docs and labels'''
-    documents = []
-    labels = []
-    with open(corpus_file, encoding='utf-8') as f:
-        for line in f:
-            tokens = line.strip()
-            documents.append(" ".join(tokens.split()[3:]).strip())
-            labels.append(tokens.split()[0])
-    return documents, labels
-
 def perform_stemming(text):
     stemmer = PorterStemmer()
     stemmed_words = [stemmer.stem(word) for word in text.split()]
