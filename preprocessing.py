@@ -27,18 +27,18 @@ def clean(text):
     text = re.sub(r'URL', "", text)  # Remove URL's
     text = re.sub(r'@USER', "", text)  # Remove @users
 
-    text = re.sub(r"what's", "what is ", text)
-    text = re.sub(r"\'re", " are ", text)
-    text = re.sub(r"\'d", " would ", text)
-    text = re.sub(r"i'm", "i am ", text)
-    text = re.sub(r"n't", " not ", text)
-    text = re.sub(r"\'scuse", " excuse ", text)
-    text = re.sub(r"\'ll", " will ", text)
-    text = re.sub(r"\'ve", " have ", text)
-    text = re.sub(r"can't", "cannot ", text)
+    text = re.sub(r"what's", "what is", text)
+    text = re.sub(r"\'re", " are", text)
+    text = re.sub(r"\'d", " would", text)
+    text = re.sub(r"i'm", "i am", text)
+    text = re.sub(r"n't", " not", text)
+    text = re.sub(r"\'scuse", "excuse", text)
+    text = re.sub(r"\'ll", " will", text)
+    text = re.sub(r"\'ve", " have", text)
+    text = re.sub(r"can't", "cannot", text)
 
-    text = re.sub(r'\d+', " ", text)  # Remove numbers
-    text = re.sub(r'#', ' ', text)  # remove hashtags
+    text = re.sub(r'\d+', "", text)  # Remove numbers
+    text = re.sub(r'#', '', text)  # remove hashtags
     text = re.sub(r"[^a-zA-Z]", " ", text)  # Removes special chars
     text = text.lower()
     text = text.split()
@@ -52,18 +52,6 @@ def clean_dataframe(df):
     df = df.apply(lambda x: clean(x))
     return df
 
-
-def data_vectorizer(x_train, y_train, x_test, y_test):
-    le = LabelEncoder()
-    le.fit(y_train)
-    y_train = le.transform(y_train)
-
-    vec = CountVectorizer()
-    vec.fit(x_train, x_test)
-    x_train = vec.transform(x_train)
-    x_test = vec.transform(x_test)
-
-    return x_train, y_train, x_test, y_test, le
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
