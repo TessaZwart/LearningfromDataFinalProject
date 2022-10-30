@@ -32,7 +32,9 @@ On which data does it work and how exactly?
 
 SVM, LSTM, LM
 
-
+Glove for LSTM:
+!wget http://nlp.stanford.edu/data/glove.840B.300d.zip
+!unzip glove*.zip
 
 ## How to train the model on own unseen data set
 
