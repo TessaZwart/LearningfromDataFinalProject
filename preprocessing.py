@@ -21,8 +21,9 @@ def clean(text, remove_stopwords):
     text = re.sub(r'URL', "", text)  # Remove URL's
     text = re.sub(r'@USER', "", text)  # Remove @users
 
-    text = text.lower()
+    text = text.lower() # Lowercase all text
     text = re.sub(r"what's", "what is", text)
+    text = re.sub(r"i'm", "i am", text)
     text = re.sub(r"'re", " are", text)
     text = re.sub(r"\'d", " would", text)
     text = re.sub(r"i'm", "i am", text)
@@ -33,9 +34,10 @@ def clean(text, remove_stopwords):
     text = re.sub(r"can't", "cannot", text)
     text = re.sub(r"doesn't", "does not", text)
 
+    text = re.sub(r"[.?!]{2,}", "", text)  # Only leave .?! with only 1 char
     text = re.sub(r'\d+', "", text)  # Remove numbers
     text = re.sub(r'/#\w+\s*/', "", text)  # Remove hashtags
-    text = re.sub(r"[^a-zA-Z]", " ", text)  # Removes special chars
+    text = re.sub(r"[^a-z.?!A-Z]", " ", text)  # Removes special chars
     text = re.sub(r"\s{2,}", " ", text)  # Remove tabs double spaces newlines etc
     if remove_stopwords:
         text = text.split()
