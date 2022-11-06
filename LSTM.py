@@ -201,8 +201,8 @@ def main():
 
                     print('---------------Evaluate function--------------')
 
-                    #print(evaluate_model(Y_test, Y_pred))
-                    print(evaluate_model(Y_test_bin, Y_test_bin))
+                    print(evaluate_model(Y_test, Y_pred))
+                    #print(evaluate_model(Y_test_bin, Y_test_bin))
 
 if __name__ == '__main__':
     main()
