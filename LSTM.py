@@ -1,199 +1,208 @@
-import random as python_random
-import json
-import argparse
+import nltk
+import pandas as pd
 import numpy as np
-from keras.models import Sequential
-from keras.layers.core import Dense
-from keras.layers import Embedding, LSTM, Dropout, TextVectorization
-from keras.initializers import Constant
+import tensorflow as tf
+import keras
+import argparse
+
+from evaluation import evaluate_model
+
+from sklearn import preprocessing
+from sklearn.preprocessing import LabelBinarizer
 from sklearn.metrics import accuracy_score, f1_score
 
-from sklearn.preprocessing import LabelBinarizer
-import tensorflow
-# Make reproducible as much as possible
-np.random.seed(1234)
-tensorflow.random.set_seed(1234)
-python_random.seed(1234)
-
-
-# def get_glove_embedding_vectors(glove_filename):
-#     embedding_vectors = {}
-#
-#     with open(glove_filename, 'r', encoding='utf-8') as file:
-#         for row in file:
-#             values = row.split(' ')
-#             word = values[0]
-#             weights = np.asarray([float(val) for val in values[1:]])
-#             embedding_vectors[word] = weights
-#     return embedding_vectors
-
+from tensorflow.python.keras.layers import LSTM, Dense, Embedding, Dropout
+from tensorflow.python.keras.models import Sequential
+from tensorflow.python.keras import layers
+from tensorflow.python.keras.optimizers import adam_v2
 
 def create_arg_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-tf", "--train_file", default='preprocessed_data/train.tsv', type=str,
-                        help="Train file to learn from (default train.tsv)")
-    parser.add_argument("-df", "--dev_file", default='preprocessed_data/dev.tsv', type=str,
-                        help="Dev file to evaluate on (default dev.tsv)")
-    parser.add_argument("-tf", "--test_file", default='/preprocessed_data/test.tsv', type=str,
-                        help="Test file to evaluate on (default test.tsv)")
+    parser.add_argument("-tf", "--train_file", default='preprocessed_data/train.csv', type=str,
+                        help="Train file to learn from (default preprocessed_data/train.csv)")
+    parser.add_argument("-df", "--dev_file", default='preprocessed_data/dev.csv', type=str,
+                        help="Dev file to evaluate on (default preprocessed_data/dev.csv)")
+    parser.add_argument("-tef", "--test_file", default='preprocessed_data/test.csv', type=str,
+                        help="Test file to evaluate on (default preprocessed_data/test.csv)")
     args = parser.parse_args()
+    print('parse done')
     return args
 
+def read_data(args):
+    use_tokens = False
 
-def read_corpus(corpus_file):
-    '''Read in review data set and returns docs and labels'''
-    documents = []
-    labels = []
-    with open(corpus_file, encoding='utf-8') as f:
-        for line in f:
-            tokens = line.strip()
-            documents.append(" ".join(tokens.split()[3:]).strip())
-            labels.append(tokens.split()[0])
-    return documents, labels
+    # Loading dataframes
+    df_train = pd.read_csv(args.train_file, sep=',', names=['text', 'label'])
+    df_dev = pd.read_csv(args.dev_file, sep=',', names=['text', 'label'])
+    df_test = pd.read_csv(args.test_file, sep=',', names=['text', 'label'])
+
+    # Converting comments to strings
+    df_train['text'] = df_train['text'].astype(str)
+    df_dev['text'] = df_dev['text'].astype(str)
+    df_test['text'] = df_test['text'].astype(str)
+
+    # Deleting empty data
+    df_train.dropna()
+    df_dev.dropna()
+    df_test.dropna()
+
+    # Loading dataframes into variables
+    x_train, y_train, x_dev, y_dev, x_test, y_test = df_train['text'], df_train['label'], df_dev['text'], df_dev['label'], df_test['text'], df_test['label']
+
+    # Transform string labels to one-hot encodings
+    encoder = LabelBinarizer()
+
+    Y_train_bin = encoder.fit_transform(y_train)
+    Y_dev_bin = encoder.fit_transform(y_dev)
+    Y_test_bin = encoder.fit_transform(y_test)
+
+    # Tokenize the data
+    tokenizer = tf.keras.preprocessing.text.Tokenizer()
+    tokenizer.fit_on_texts(df_train['text'])
+    tokenizer.fit_on_texts(df_dev['text'])
+    tokenizer.fit_on_texts(df_test['text'])
+
+    x_train_sequences = tokenizer.texts_to_sequences(df_train['text'])
+    x_development_sequences = tokenizer.texts_to_sequences(df_dev['text'])
+    x_test_sequences = tokenizer.texts_to_sequences(df_test['text'])
 
 
-def read_embeddings(embeddings_file):
-    """Read in word embeddings from file and save as numpy array"""
-    embeddings = json.load(open(embeddings_file, 'r'))
-    return {word: np.array(embeddings[word]) for word in embeddings}
+    # Pad the data
+    max_comment_length = 300
+    x_train_padded = tf.keras.preprocessing.sequence.pad_sequences(x_train_sequences, maxlen=max_comment_length)
+    x_dev_padded = tf.keras.preprocessing.sequence.pad_sequences(x_development_sequences, maxlen=max_comment_length)
+    x_test_padded = tf.keras.preprocessing.sequence.pad_sequences(x_test_sequences, maxlen=max_comment_length)
+
+    return x_train_padded, x_dev_padded, x_test_padded, Y_train_bin, Y_dev_bin, Y_test_bin, tokenizer
+
+def get_glove_embedding_vectors(glove_filename):
+    embedding_vectors = {}
+
+    with open(glove_filename,'r',encoding='utf-8') as file:
+        for row in file:
+            values = row.split(' ')
+            word = values[0]
+            weights = np.asarray([float(value) for value in values[1:]])
+            embedding_vectors[word] = weights
+    return embedding_vectors
 
 
-def get_emb_matrix(voc, emb):
-    """Get embedding matrix given vocab and the embeddings"""
-    num_tokens = len(voc) + 2
-    word_index = dict(zip(voc, range(len(voc))))
-    # Bit hacky, get embedding dimension from the word "the"
-    embedding_dim = len(emb["the"])
-    # Prepare embedding matrix to the correct size
-    embedding_matrix = np.zeros((num_tokens, embedding_dim))
-    for word, i in word_index.items():
-        embedding_vector = emb.get(word)
+def get_embedding_matrix(embedding_vectors, tokenizer):
+    embedding_dim = 300
+    vocab_length = len(tokenizer.word_index)+1
+
+    embedding_matrix = np.zeros((vocab_length, embedding_dim))
+    for word, index in tokenizer.word_index.items():
+        if index < vocab_length:
+            embedding_vector = embedding_vectors.get(word)
         if embedding_vector is not None:
-            # Words not found in embedding index will be all-zeros.
-            embedding_matrix[i] = embedding_vector
-    # Final matrix with pretrained embeddings that we can feed to embedding layer
+            embedding_matrix[index] = embedding_vector
     return embedding_matrix
 
 
-def list_to_string(input_list):
-    """Function for converting list of lists of words to a list of strings"""
-    placeholder = []
-    for item in input_list:
-        item = " ".join(item)
-        placeholder.append(item)
-    return placeholder
+def create_model(embedding_matrix, tokenizer, lr, dropout):
+    vocab_length = len(tokenizer.word_index)+1
+    embedding_dim = 300
+
+    lstm_units = 1000
+    opt = adam_v2.Adam(learning_rate=lr)
 
 
-def create_model(Y_train, emb_matrix):
-    """Create the Keras model to use"""
-    # Define settings, you might want to create cmd line args for them
-    learning_rate = 0.0005
-    loss_function = 'categorical_crossentropy'
-    optim = tensorflow.Adam(learning_rate=learning_rate)
-    # Take embedding dim and size from emb_matrix
-    embedding_dim = len(emb_matrix[0])
-    num_tokens = len(emb_matrix)
-    num_labels = len(set((Y_train)))
-
-    # Now build the model
     model = Sequential()
-    model.add(Embedding(num_tokens, embedding_dim, trainable=False, weights=[emb_matrix]))
-    # model.add(Embedding(num_tokens, embedding_dim, embeddings_initializer=Constant(emb_matrix), trainable=False))
-    # LSTM layers
-    model.add(LSTM(1000, return_sequences=True))
-    model.add(LSTM(1000))
-    model.add(Dropout(0.7))
+    model.add(Embedding(vocab_length, embedding_dim, trainable = False, weights=[embedding_matrix]))
+    model.add(LSTM(lstm_units, return_sequences=True))
+    model.add(LSTM(lstm_units))
+    model.add(Dropout(dropout))
+    model.add(layers.Dense(1, activation='softmax' ))
+    model.compile(loss='binary_crossentropy',optimizer=opt, metrics=['accuracy'])
+    model.summary()
 
-    # Ultimately, end with dense layer with softmax
-    model.add(Dense(input_dim=embedding_dim, units=num_labels, activation="softmax"))
-    # Compile model using our settings, check for accuracy
-    model.compile(loss=loss_function, optimizer=optim, metrics=['accuracy'])
+    return model
+
+def train_model(model, x_train_padded, Y_train_bin, x_dev_padded, Y_dev_bin, epochs, batch_size):
+
+    model.fit(pd.DataFrame(x_train_padded), Y_train_bin,
+                    epochs=epochs,
+                    verbose=False,
+                    shuffle=True,
+                    validation_data=(pd.DataFrame(x_dev_padded), Y_dev_bin),
+                    batch_size=batch_size,
+                    )
     return model
 
 
-def train_model(model, X_train, Y_train, X_dev, Y_dev):
-    '''Train the model here. Note the different settings you can experiment with!'''
-    # Potentially change these to cmd line args again
-    # And yes, don't be afraid to experiment!
-    verbose = 1
-    batch_size = 16
-    epochs = 50
-    # Early stopping: stop training when there are three consecutive epochs without improving
-    # It's also possible to monitor the training loss with monitor="loss"
-    callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
-    # Finally fit the model to our data
-    model.fit(X_train, Y_train, verbose=verbose, epochs=epochs, callbacks=[callback], batch_size=batch_size,
-              validation_data=(X_dev, Y_dev))
-    # Print final accuracy for the model (clearer overview)
-    test_set_predict(model, X_dev, Y_dev, "dev")
-    return model
+
+def evaluate(model, x_test_padded, Y_test_bin):
+    metrics = model.evaluate(pd.DataFrame(x_test_padded), Y_test_bin)
+    predictions = model.predict_classes(pd.DataFrame(x_test_padded))
+    labels = Y_test_bin.argmax(axis=1)
+
+    report = classification_report(labels , predictions,output_dict=True, digits=3)
+    report = pd.DataFrame(report).transpose()
+    print(report.to_latex())
 
 
-def test_set_predict(model, X_test, Y_test, ident):
-    '''Do predictions and measure accuracy on our own test set (that we split off train)'''
+def test_set_predict(model, X_test, Y_test):
+    ''' blablabla'''
     # Get predictions using the trained model
     Y_pred = model.predict(X_test)
     # Finally, convert to numerical labels to get scores with sklearn
     Y_pred = np.argmax(Y_pred, axis=1)
     # If you have gold data, you can calculate accuracy
     Y_test = np.argmax(Y_test, axis=1)
+
+    print("extra")
     print('Accuracy on own {1} set: {0}'.format(round(accuracy_score(Y_test, Y_pred), 5), ident))
     print("(macro) F1 score of test set:")
     print(f1_score(Y_test, Y_pred, average='macro'))
-
+    print("extra^")
+    return Y_test, Y_pred
 
 def main():
-    '''Main function to train and test neural network given cmd line arguments'''
-    # Generate train/dev/test split
+
     args = create_arg_parser()
+    x_train_padded, x_dev_padded, x_test_padded, Y_train_bin, Y_dev_bin, Y_test_bin, tokenizer = read_data(args)
 
-    # TODO: comment
-    X_train, Y_train = read_corpus(args.train_file)
-    X_dev, Y_dev = read_corpus(args.dev_file)
-    X_test, Y_test = read_corpus(args.test_file)
+    print('----------Matrix generation-----------------')
 
-    # Read in the data and embeddings
-    # X_train, Y_train = read_corpus(args.train_file)
-    # X_dev, Y_dev = read_corpus(args.dev_file)
-    embeddings = read_embeddings('glove.840B.300d.txt')
+    embedding_vectors = get_glove_embedding_vectors('glove.840B.300d.txt')
 
-    #embedding_vectors = get_glove_embedding_vectors('glove.840B.300d.txt')
+    embedding_matrix = get_embedding_matrix(embedding_vectors, tokenizer)
 
+    print('----------Create model-----------------')
 
-    # Transform words to indices using a vectorizer
-    vectorizer = TextVectorization(standardize=None, output_sequence_length=50)
-    # Use train and dev to create vocab - could also do just train
-    text_ds = tensorflow.data.Dataset.from_tensor_slices(X_train + X_dev)
-    vectorizer.adapt(text_ds)
-    # Dictionary mapping words to idx
-    voc = vectorizer.get_vocabulary()
-    emb_matrix = get_emb_matrix(voc, embeddings)
+    learning_rates = [0.01, 0.001, 0.0001]
+    epochs = [50, 75, 100]
+    batch_sizes = [16, 32, 64, 128]
+    dropouts = [0.0, 0.3, 0.5, 0.7]
 
-    # Transform string labels to one-hot encodings
-    encoder = LabelBinarizer()
-    Y_train_bin = encoder.fit_transform(Y_train)  # Use encoder.classes_ to find mapping back
-    Y_dev_bin = encoder.fit_transform(Y_dev)
+    for lr in learning_rates:
+        for e in epochs:
+            for bs in batch_sizes:
+                for drop in dropouts:
+                    print('-------------------New predictions------------------------')
+                    print('Learning rate: ', lr)
+                    print('Number of epochs: ', e)
+                    print('Batch size: ', bs)
+                    print('Dropout: ', drop)
+                    model = create_model(embedding_matrix, tokenizer, lr, drop)
 
-    # Create model
-    model = create_model(Y_train, emb_matrix)
+                    print('----------Training-----------------')
 
-    # Transform input to vectorized input
-    X_train_vect = vectorizer(np.array([[s] for s in X_train])).numpy()
-    X_dev_vect = vectorizer(np.array([[s] for s in X_dev])).numpy()
+                    model = train_model(model, x_train_padded, Y_train_bin, x_dev_padded, Y_dev_bin, e, bs)
 
-    print(model.summary)
+                    # print('----------Evaluation-----------------')
+                    #
+                    # evaluate(model, x_test_padded, Y_test_bin)
+                    #
+                    print('----------Prediction-----------------')
+                    #
+                    Y_test, Y_pred = test_set_predict(model, x_test_padded, Y_test_bin)
 
-    # Train the model
-    model = train_model(model, X_train_vect, Y_train_bin, X_dev_vect, Y_dev_bin)
+                    print('---------------Evaluate function--------------')
 
-    # Do predictions on specified test set
-    # Read in test set and vectorize
-    # X_test, Y_test = read_corpus("/content/drive/MyDrive/colab_notebooks/test.txt")
-    Y_test_bin = encoder.fit_transform(Y_test)
-    X_test_vect = vectorizer(np.array([[s] for s in X_test])).numpy()
-    # Finally do the predictions
-    test_set_predict(model, X_test_vect, Y_test_bin, "test")
-
+                    #print(evaluate_model(Y_test, Y_pred))
+                    print(evaluate_model(Y_test_bin, Y_test_bin))
 
 if __name__ == '__main__':
     main()
