@@ -105,8 +105,6 @@ def print_all_baseline_results(x_train, y_train, x_test, y_test, le):
     print("Executed in s: " + str(start - time.time()))
 
     print("---- Random Forest ----")
-    print("Executed in s: " + str(start - time.time()))
-
     print(randomforestclassifier(x_train, y_train, x_test, y_test, le))
     print("Executed in s: " + str(start - time.time()))
 
@@ -116,9 +114,18 @@ def print_all_baseline_results(x_train, y_train, x_test, y_test, le):
 
 
 if __name__ == "__main__":
-    df_train = pd.read_csv('data/train.tsv', sep='\t', names=['text', 'label'])
-    df_dev = pd.read_csv('data/dev.tsv', sep='\t', names=['text', 'label'])
-    df_test = pd.read_csv('data/test.tsv', sep='\t', names=['text', 'label'])
+    df_train = pd.read_csv('preprocessed_data/train.csv', names=['text', 'label'])
+    df_dev = pd.read_csv('preprocessed_data/dev.csv', names=['text', 'label'])
+    df_test = pd.read_csv('preprocessed_data/test.csv', names=['text', 'label'])
+
+    df_train['text'] = df_train['text'].astype(str)
+    df_dev['text'] = df_dev['text'].astype(str)
+    df_test['text'] = df_test['text'].astype(str)
+
+    # Preprocessing the data
+    df_train['text'] = clean_dataframe(df_train['text'])
+    df_test['text'] = clean_dataframe(df_test['text'])
+    df_dev['text'] = clean_dataframe(df_dev['text'])
 
     x_train, y_train, x_test, y_test, le = data_vectorizer(df_train['text'], df_train['label'], df_test['text'],
                                                            df_test['label'])

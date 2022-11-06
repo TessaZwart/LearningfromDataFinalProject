@@ -70,14 +70,13 @@ if __name__ == "__main__":
     nlp = spacy.load('en_core_web_sm')
 
     # Load the files
-    df_train = pd.read_csv('data/train.tsv', sep='\t', names=['text', 'label'])
-    df_dev = pd.read_csv('data/dev.tsv', sep='\t', names=['text', 'label'])
-    df_test = pd.read_csv('data/test.tsv', sep='\t', names=['text', 'label'])
+    df_train = pd.read_csv('preprocessed_data/train.tsv', sep='\t', names=['text', 'label'])
+    df_dev = pd.read_csv('preprocessed_data/dev.tsv', sep='\t', names=['text', 'label'])
+    df_test = pd.read_csv('preprocessed_data/test.tsv', sep='\t', names=['text', 'label'])
 
-    # Preprocessing the data
-    df_train['text'] = clean_dataframe(df_train['text'])
-    df_test['text'] = clean_dataframe(df_test['text'])
-    df_dev['text'] = clean_dataframe(df_dev['text'])
+    df_train['text'] = df_train['text'].astype(str)
+    df_dev['text'] = df_dev['text'].astype(str)
+    df_test['text'] = df_test['text'].astype(str)
 
     # Construct a set of features
     features = construct_features()
