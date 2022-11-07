@@ -46,23 +46,26 @@ The hyperparameters that are chosen are tuned on the data of the following paper
 
 ### 0. Using classic model
 
-### 1. Using Enhanced classic model
+### 1. Using Enhanced classic model (Naive Bayes)
+To use the enhanced Naive Bayes model, you can use the following command:
+```
+python3 baseline_enhanced.py
+```
 
 ### 2. Using LSTM model
-To use the LSTM model, you can use the following command:
+To use the LSTM model, you first have to load the Glove embeddings. This can be done using the following commands:
+```
+wget http://nlp.stanford.edu/data/glove.840B.300d.zip
+unzip glove*.zip
+```
+Then, you can run the model using the following command:
 ```
 python3 LSTM.py
 ```
-The model makes use of the following hyperparameters:
-ADD BEST HYPERPARAMETERS
 
 ### 3. Using Language model
 
 
-
-Glove for LSTM:
-!wget http://nlp.stanford.edu/data/glove.840B.300d.zip
-!unzip glove*.zip
 
 ## Chapter 3: How to train the model on own unseen data set
 Different data can be used by changing the input data, using --train_file <OWN_TRAIN_FILE>, --dev_file <OWN_DEV_FILE>, or --test_file <OWN_TEST_FILE>, after the comment line. For example, running the LSTM model:
