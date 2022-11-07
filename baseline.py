@@ -14,14 +14,14 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn import svm
 
 from evaluation import evaluate_model
-#from preprocessing import clean_dataframe
 from preprocessing import data_vectorizer
 
-np.random.seed(101010101)
-print('random seeds: 101010101')
+np.random.seed(1234)
+
 
 
 def logistic_regression(x_train, y_train, x_test, y_test, le):
+    """ Performs the Logistic regression and print the evaluation """
     model = LogisticRegression(max_iter=1000)
     model.fit(x_train, y_train)
     y_pred = model.predict(x_test)
@@ -31,6 +31,7 @@ def logistic_regression(x_train, y_train, x_test, y_test, le):
 
 
 def naive_bayes(x_train, y_train, x_test, y_test, le):
+    """ Performs the Naive Bayes and print the evaluation """
     model = MultinomialNB()
     model.fit(x_train, y_train)
     y_pred = model.predict(x_test)
@@ -40,6 +41,7 @@ def naive_bayes(x_train, y_train, x_test, y_test, le):
 
 
 def linear_svm(x_train, y_train, x_test, y_test, le):
+    """ Performs the Linear SVM and print the evaluation """
     model = LinearSVC()
     model.fit(x_train, y_train)
     y_pred = model.predict(x_test)
@@ -49,6 +51,7 @@ def linear_svm(x_train, y_train, x_test, y_test, le):
 
 
 def svmclassifier(x_train, y_train, x_test, y_test, le):
+    """ Performs the SVM and print the evaluation """
     model = svm.SVC()
     model.fit(x_train, y_train)
     y_pred = model.predict(x_test)
@@ -58,6 +61,7 @@ def svmclassifier(x_train, y_train, x_test, y_test, le):
 
 
 def knnclassifier(x_train, y_train, x_test, y_test, le):
+    """ Performs the KNN and print the evaluation """
     model = KNeighborsClassifier()
     model.fit(x_train, y_train)
     y_pred = model.predict(x_test)
@@ -67,6 +71,7 @@ def knnclassifier(x_train, y_train, x_test, y_test, le):
 
 
 def randomforestclassifier(x_train, y_train, x_test, y_test, le):
+    """ Performs the Random Forest and print the evaluation """
     model = RandomForestClassifier()
     model.fit(x_train, y_train)
     y_pred = model.predict(x_test)
@@ -76,6 +81,7 @@ def randomforestclassifier(x_train, y_train, x_test, y_test, le):
 
 
 def decisiontreeclassifier(x_train, y_train, x_test, y_test, le):
+    """ Performs the Decision Tree and print the evaluation """
     model = DecisionTreeClassifier()
     model.fit(x_train, y_train)
     y_pred = model.predict(x_test)
@@ -85,6 +91,7 @@ def decisiontreeclassifier(x_train, y_train, x_test, y_test, le):
 
 
 def print_all_baseline_results(x_train, y_train, x_test, y_test, le):
+    """ Prints all the results and there running time """
     start = time.time()
     print("----Logistic Regression ----")
     print(logistic_regression(x_train, y_train, x_test, y_test, le))
@@ -116,6 +123,7 @@ def print_all_baseline_results(x_train, y_train, x_test, y_test, le):
 
 
 if __name__ == "__main__":
+    # Parser arguments to make it easier to use different data
     parser = argparse.ArgumentParser()
     parser.add_argument("-tf", "--train_file", default='preprocessed_data/train.csv', type=str,
                         help="Train file to learn from (default train.csv)")
@@ -138,5 +146,6 @@ if __name__ == "__main__":
 
     x_train, y_train, x_test, y_test, le = data_vectorizer(df_train['text'], df_train['label'], df_test['text'],
                                                            df_test['label'])
-
+    
+    # Give the evaluation of the model
     print_all_baseline_results(x_train, y_train, x_test, y_test, le)
