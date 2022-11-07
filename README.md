@@ -1,7 +1,9 @@
 # LearningfromDataFinalProject 😊
 ## Explanation of repository
 
-Classification of offensive tweets by using a classic model, LSTM, and language model. Additionally, we want to investigate if the content of the offensive words matter in the classification of offensive tweets by changing offensive words to a single OFFENSIVE token.
+Classification of offensive tweets by using a classic model, LSTM, and language model. Additionally, we investigated if data augmentation using English-Spanish back translation, can improve the language model. Our research paper can be found here:
+
+* Masoud Repazour Najafi, Nils Visser, and Tessa Zwart, 2022. “What the MIERDA!” Classifying offensive tweets in combination with data augmentation techniques (English-Spanish back translation)
 
 ## Chapter 1: Installation Instructions
 ### 0. Cloning the repository
@@ -10,15 +12,20 @@ Install git and clone the repository. Use the following command to clone the rep
 git clone https://github.com/TessaZwart/LearningfromDataFinalProject.git
 ```
 
+### 1. Creating virtual environment
+Create a virtual environment by using the following line:
+```
+source env/bin/activate
+```
 
-### 1. Installing Dependencies
+### 2. Installing Dependencies
 Make sure to install all dependencies before the program is executed by using python's package manager. Use the following command:
 ```
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 
-### 2. Downloading Spacy's language model
+### 3. Downloading Spacy's language model
 Make sure download and install spacy's language model by using the command:
 ```
 python3 -m spacy download en_core_web_sm
@@ -26,11 +33,30 @@ python3 -m spacy download en_core_web_sm
 
 
 ## Chapter 2: Users manual
-## How to train the model on the data
+The hyperparameters that are chosen are tuned on the data of the following paper:
+* Predicting the Type and Target of Offensive Posts in Social Media. Zampieri et. al
+(2019)
 
-On which data does it work and how exactly?
+Different data can be used by changing the input data, using --train_file <OWN_TRAIN_FILE>, --dev_file <OWN_DEV_FILE>, or --test_file <OWN_TEST_FILE>, after the comment line. For example, running the LSTM model:
+```
+python3 LSTM.py --train_file <OWN_TRAIN_FILE> --dev_file <OWN_DEV_FILE> --test_file <OWN_TEST_FILE>
+```
 
-SVM, LSTM, LM
+### 0. Using classic model
+
+### 1. Using Enhanced classic model
+
+### 2. Using LSTM model
+To use the LSTM model, you can use the following command:
+```
+python3 LSTM.py
+```
+The model makes use of the following hyperparameters:
+ADD BEST HYPERPARAMETERS
+
+### 3. Using Language model
+
+
 
 Glove for LSTM:
 !wget http://nlp.stanford.edu/data/glove.840B.300d.zip
