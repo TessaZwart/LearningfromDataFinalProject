@@ -77,4 +77,5 @@ Different data can be used by changing the input data, using --train_file <OWN_T
 ```
 python3 LSTM.py --train_file <OWN_TRAIN_FILE> --dev_file <OWN_DEV_FILE> --test_file <OWN_TEST_FILE>
 ```
+Note that this only work for baseline.py, enhanced_baseline.py, and LSTM.py, not for the Language Model.
 
