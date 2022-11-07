@@ -1,7 +1,7 @@
 import nltk
 import pandas as pd
 import numpy as np
-import tensorflow as tf
+import tf as tensorflow
 import keras
 import argparse
 
@@ -15,6 +15,7 @@ from tensorflow.python.keras.layers import LSTM, Dense, Embedding, Dropout
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras import layers
 from tensorflow.python.keras.optimizers import adam_v2
+
 
 def create_arg_parser():
     parser = argparse.ArgumentParser()
@@ -104,7 +105,7 @@ def create_model(embedding_matrix, tokenizer, lr, dropout):
     vocab_length = len(tokenizer.word_index)+1
     embedding_dim = 300
 
-    lstm_units = 1000
+    lstm_units = 512
     opt = adam_v2.Adam(learning_rate=lr)
 
 
@@ -130,20 +131,7 @@ def train_model(model, x_train_padded, Y_train_bin, x_dev_padded, Y_dev_bin, epo
                     )
     return model
 
-
-
-def evaluate(model, x_test_padded, Y_test_bin):
-    metrics = model.evaluate(pd.DataFrame(x_test_padded), Y_test_bin)
-    predictions = model.predict_classes(pd.DataFrame(x_test_padded))
-    labels = Y_test_bin.argmax(axis=1)
-
-    report = classification_report(labels , predictions,output_dict=True, digits=3)
-    report = pd.DataFrame(report).transpose()
-    print(report.to_latex())
-
-
 def test_set_predict(model, X_test, Y_test):
-    ''' blablabla'''
     # Get predictions using the trained model
     Y_pred = model.predict(X_test)
     # Finally, convert to numerical labels to get scores with sklearn
@@ -151,58 +139,28 @@ def test_set_predict(model, X_test, Y_test):
     # If you have gold data, you can calculate accuracy
     Y_test = np.argmax(Y_test, axis=1)
 
-    print("extra")
-    print('Accuracy on own {1} set: {0}'.format(round(accuracy_score(Y_test, Y_pred), 5), ident))
-    print("(macro) F1 score of test set:")
-    print(f1_score(Y_test, Y_pred, average='macro'))
-    print("extra^")
     return Y_test, Y_pred
+    
 
 def main():
 
     args = create_arg_parser()
     x_train_padded, x_dev_padded, x_test_padded, Y_train_bin, Y_dev_bin, Y_test_bin, tokenizer = read_data(args)
 
-    print('----------Matrix generation-----------------')
-
     embedding_vectors = get_glove_embedding_vectors('glove.840B.300d.txt')
 
     embedding_matrix = get_embedding_matrix(embedding_vectors, tokenizer)
 
-    print('----------Create model-----------------')
-
-    learning_rates = [0.01, 0.001, 0.0001]
-    epochs = [50, 75, 100]
-    batch_sizes = [16, 32, 64, 128]
-    dropouts = [0.0, 0.3, 0.5, 0.7]
-
-    for lr in learning_rates:
-        for e in epochs:
-            for bs in batch_sizes:
-                for drop in dropouts:
-                    print('-------------------New predictions------------------------')
-                    print('Learning rate: ', lr)
-                    print('Number of epochs: ', e)
-                    print('Batch size: ', bs)
-                    print('Dropout: ', drop)
-                    model = create_model(embedding_matrix, tokenizer, lr, drop)
-
-                    print('----------Training-----------------')
-
-                    model = train_model(model, x_train_padded, Y_train_bin, x_dev_padded, Y_dev_bin, e, bs)
-
-                    # print('----------Evaluation-----------------')
-                    #
-                    # evaluate(model, x_test_padded, Y_test_bin)
-                    #
-                    print('----------Prediction-----------------')
-                    #
-                    Y_test, Y_pred = test_set_predict(model, x_test_padded, Y_test_bin)
-
-                    print('---------------Evaluate function--------------')
-
-                    print(evaluate_model(Y_test, Y_pred))
-                    #print(evaluate_model(Y_test_bin, Y_test_bin))
+    lr = 0.001
+    e = 2
+    bs = 100
+    drop=0.3
+    
+    model = create_model(embedding_matrix, tokenizer, lr, drop)
+    model = train_model(model, x_train_padded, Y_train_bin, x_dev_padded, Y_dev_bin, e, bs)
+    Y_test, Y_pred = test_set_predict(model, x_test_padded, Y_test_bin)
+    print(evaluate_model(model, Y_test, Y_pred))
+                    
 
 if __name__ == '__main__':
     main()
