@@ -31,6 +31,12 @@ Make sure download and install spacy's language model by using the command:
 python3 -m spacy download en_core_web_sm
 ```
 
+### 4. Preprocess the data
+Run the following command line to preprocess the data:
+```
+python3 preprocessing.py
+```
+
 
 ## Chapter 2: Users manual
 The hyperparameters that are chosen are tuned on the data of the following paper:
