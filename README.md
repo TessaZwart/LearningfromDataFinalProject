@@ -37,10 +37,6 @@ The hyperparameters that are chosen are tuned on the data of the following paper
 * Predicting the Type and Target of Offensive Posts in Social Media. Zampieri et. al
 (2019)
 
-Different data can be used by changing the input data, using --train_file <OWN_TRAIN_FILE>, --dev_file <OWN_DEV_FILE>, or --test_file <OWN_TEST_FILE>, after the comment line. For example, running the LSTM model:
-```
-python3 LSTM.py --train_file <OWN_TRAIN_FILE> --dev_file <OWN_DEV_FILE> --test_file <OWN_TEST_FILE>
-```
 
 ### 0. Using classic model
 
@@ -62,6 +58,9 @@ Glove for LSTM:
 !wget http://nlp.stanford.edu/data/glove.840B.300d.zip
 !unzip glove*.zip
 
-## How to train the model on own unseen data set
-
+## Chapter 3: How to train the model on own unseen data set
+Different data can be used by changing the input data, using --train_file <OWN_TRAIN_FILE>, --dev_file <OWN_DEV_FILE>, or --test_file <OWN_TEST_FILE>, after the comment line. For example, running the LSTM model:
+```
+python3 LSTM.py --train_file <OWN_TRAIN_FILE> --dev_file <OWN_DEV_FILE> --test_file <OWN_TEST_FILE>
+```
 
