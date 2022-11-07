@@ -69,7 +69,7 @@ python3 LSTM.py
 ```
 
 ### 3. Using Language model
-
+Unfortunately due to time contraints we were not able to implement the language model into our repository. a .ipynb file can be loaded into a free version of google colab (https://colab.research.google.com/) to run this file. Make sure to load your data first before you run the code.
 
 
 ## Chapter 3: How to train the model on own unseen data set
