@@ -45,6 +45,11 @@ The hyperparameters that are chosen are tuned on the data of the following paper
 
 
 ### 0. Using classic model
+To use the classic models, you can use the following command:
+```
+python3 baseline.py
+```
+The following models are implemented in this file: Logistic regression, Naive Bayes, Decision Tree, Random Forest, K-Neurest Neighbor, SVM, and Linear SVM.
 
 ### 1. Using Enhanced classic model (Naive Bayes)
 To use the enhanced Naive Bayes model, you can use the following command:
